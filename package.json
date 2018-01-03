@@ -1,0 +1,14 @@
+{
+    "name": "promise-katas",
+    "version": "1.0.0",
+    "description": "",
+    "scripts": {
+        "test": "jest --verbose",
+        "test:watch": "jest --watch --verbose"
+    },
+    "author": "Marcin Wysocki",
+    "license": "ISC",
+    "dependencies": {
+        "jest": "^21.2.1"
+    }
+}
