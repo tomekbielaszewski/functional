@@ -1,78 +1,89 @@
 /*
-
-    Napisz funkcję "curry", która przyjmuje funkcję (funcIn) wymagającą wielu parametrów 
-    i zwraca nową funkcję (funcOut). 
+    W niektórych językach programowania istnieje operator "pipe", umożliwiający 
+    łatwe łączenie wywołań funkcji (w JS na razie to tylko propozycja).
+    Przykładowo odpowiednikiem takiego zapisu w JS: 
     
-    Zwrócona funkcja działa identycznie jak funcIn, ale umożliwia przekazywanie parametrów
-    pojedynczo, jeden za drugim. funcOut powinna zatem:
-        - przyjmować tylko jeden paramter,
-        - zwracać nową funkcję, o takim zamym zachowaniu, jeśli suma przekazanych do tej pory argumentów
-          jest mniejsza niż liczba wymaganych argumentów (arność, ang. arity) funcIn
-        - zwracać wartość taką samą jak funcIn po przekazaniu ilości parametrów równej arności funcIn
+    const value = multiplyByFour(addTwo(2));
 
-    Przykład:
+    Jest (w Elixirze):
+    
+    value = 2 
+        |> addTwo 
+        |> multiplyByFour
+    
+    W obu przypadkach wynikiem będzie 16.
 
-        const func = (a, b, c, d) => a + b + c + d;
-        const curriedFunc = curry(func);
+    Stwórz mechanizm pozwalający na podobne, deklaratywne tworzenie łańcucha
+    wywołań funkcji przeksztalcających pewną wartość. 
+        1. Za operator "|>" niech posłuzy metoda o nazwie "chain". 
+        2. Napisane testy zakładają taki oto interfejs (metoda "finally" jest opcjonalna, 
+           jest ona odpowiednikiem .chain(handler).return()):
 
-        jest równoważne z:
-
-        const curriedFunc = a => b => c => d => a + b + c + d;
-
-        i skutkuje takim zachowaniem: 
-
-        curriedFunc(1)          // zwraca funkcję
-        curriedFunc(1)(2)       // zwraca funkcję
-        curriedFunc(1)(2)(3)    // zwraca funkcję
-        curriedFunc(1)(2)(3)(4) // zwraca 10
-
+        interface Pipe<T> {
+            static startingWith(value: T): Pipe<T>;
+            chain<U>(handler: (value: T) => U): Pipe<U>;
+            return(): T;
+            finally<U>?(handler: (value: T) => U): U;
+        }
 */
 
-describe('problem5 - curry', () => {
-    it("returns the same func if it doesn't require any parameters", () => {
-        const func = () => 'apple';
-
-        expect(curry(func)).toBe(func);
+describe('problem5 - pipe', () => {
+    it('returns a wrapped value (an object)', () => {
+        expect(Pipe.startingWith(2)).toBeInstanceOf(Pipe);
     });
 
-    it('returns a new function if with arity === 1 if the original one required any parameters', () => {
-        const func = (a, b, c, d) => a + b + c + d;
+    describe('chain()', () => {
+        it('returns a wrapped value', () => {
+            expect(Pipe.startingWith(2).chain(v => v)).toBeInstanceOf(Pipe);
+        });
 
-        const curriedFunc = curry(func);
+        it('calls the handler with the actual value underneath the Pipe', () => {
+            const fakeHandler1 = jest.fn(v => v + 2);
+            const fakeHandler2 = jest.fn();
 
-        expect(curriedFunc.length).toBe(1);
+            Pipe.startingWith(2)
+                .chain(fakeHandler1)
+                .chain(fakeHandler2);
+
+            expect(fakeHandler1).toHaveBeenCalledWith(2);
+            expect(fakeHandler2).toHaveBeenCalledWith(4);
+        });
     });
 
-    it('returns a new function if with arity === 1 when any parameter below original functions arity is passed', () => {
-        const func = (a, b, c, d) => a + b + c + d;
-
-        const curriedFunc = curry(func);
-
-        expect(typeof curriedFunc(1)).toBe('function');
-        expect(curriedFunc(1).length).toBe(1);
-        expect(typeof curriedFunc(1)(2)).toBe('function');
-        expect(curriedFunc(1)(2).length).toBe(1);
+    describe('return()', () => {
+        it('unwraps the value and returns it directly', () => {
+            expect(
+                Pipe.startingWith(2)
+                    .chain(v => v + 5)
+                    .chain(v => v % 3)
+                    .chain(number => `The magic number is: ${number}`)
+                    .return(),
+            ).toBe('The magic number is: 1');
+        });
     });
 
-    it("returns a result of func's invocation if all the params have been passed", () => {
-        const func = (a, b, c) => a + b + c;
+    if (Pipe.startingWith().finally) {
+        describe('finally()', () => {
+            it('unwraps the value and returns it directly', () => {
+                expect(
+                    Pipe.startingWith(2)
+                        .chain(v => v + 5)
+                        .chain(v => v % 3)
+                        .finally(number => `The magic number is: ${number}`),
+                ).toBe('The magic number is: 1');
+            });
 
-        const curriedFunc = curry(func);
+            it('calls the handler with the actual value underneath the Pipe', () => {
+                const fakeHandler1 = jest.fn(v => v + 2);
+                const fakeHandler2 = jest.fn();
 
-        expect(curriedFunc(1)(2)(3)).toBe(6);
-    });
+                Pipe.startingWith(2)
+                    .chain(fakeHandler1)
+                    .finally(fakeHandler2);
 
-    it('curried function ignores all the parameters, but the first', () => {
-        const func = (a, b, c, d) => a + b + c + d;
-
-        const curriedFunc = curry(func);
-
-        expect(typeof curriedFunc(1, 2, 3)).toBe('function');
-        expect(curriedFunc(1, 2, 3).length).toBe(1);
-        expect(typeof curriedFunc(1)(2, 3, 4)).toBe('function');
-        expect(curriedFunc(1)(2, 3, 4).length).toBe(1);
-        expect(typeof curriedFunc(1)(2)(3, 4, 5)).toBe('function');
-        expect(curriedFunc(1)(2)(3, 4, 5).length).toBe(1);
-        expect(curriedFunc(1)(2)(3)(4, 5, 6)).toBe(10);
-    });
+                expect(fakeHandler1).toHaveBeenCalledWith(2);
+                expect(fakeHandler2).toHaveBeenCalledWith(4);
+            });
+        });
+    }
 });

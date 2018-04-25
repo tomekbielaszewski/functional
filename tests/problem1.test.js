@@ -1,26 +1,27 @@
 /*
-    Napisz funkcję 'map', przyjmującą jako argumenty  tablicę oraz funkcję mapującą i zwracającą nową
-    tablicę, zawierającą wyniki wywołań funkcji mapującej z poszczególnymi elementami tablicy wejściowej
+    Napisz funkcję "groupBy", przyjmującą jako parametr kolekcję i funkcję grupującą,
+    a zwracającą obiekt z elementami tablicy pogrupowanymi wg. zwróconych przez funkcję 
+    grupującą kluczy.
 
     Przykład:
 
-    console.log(map([1,2,3], v => v + 1)) // [2,3,4]
+    groupBy([1,2,3,4,5], elem => elem % 2) === { '1': [1,3,5], '0': [2,4] }
+
 */
 
-describe('problem1 - map', () => {
-    it('returns an array', () => {
-        expect(map([1, 2, 3], v => v)).toBeInstanceOf(Array);
+describe('problem1 - groupBy', () => {
+    it('returns an object', () => {
+        expect(groupBy([1, 2, 3], v => v)).toBeInstanceOf(Object);
+        expect(groupBy([1, 2, 3], v => v)).not.toBeInstanceOf(Function);
     });
 
-    it('calls the projection function on each element', () => {
-        const projection = jest.fn(v => v);
+    it('groups items by the keys returned by the supplied function', () => {
+        const result = groupBy([1, 2, 3, 4], number => number % 2);
 
-        map([1, 2, 3], projection);
+        const keys = Object.keys(result);
 
-        expect(projection).toHaveBeenCalledTimes(3);
-    });
-
-    it('return an array with results of the projection function', () => {
-        expect(map([1, 2, 3], v => v + 2)).toEqual([3, 4, 5]);
+        expect(keys.length).toBe(2);
+        expect(keys.indexOf('1') > -1).toBe(true);
+        expect(keys.indexOf('0') > -1).toBe(true);
     });
 });

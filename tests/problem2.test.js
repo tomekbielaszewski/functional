@@ -1,27 +1,67 @@
 /*
-    Napisz funkcję "groupBy", przyjmującą jako parametr kolekcję i funkcję grupującą,
-    a zwracającą obiekt z elementami tablicy pogrupowanymi wg. zwróconych przez funkcję 
-    grupującą kluczy.
+    Napisz funkcję "compose", przyjmującą dwie funkcje jako parametry i zwracającą
+    nową funkcję. 
+    
+    Wynikiem wywołania nowej funkcji z parametrem (param) jest rezultat wywołania drugiej funkcji wejściowej
+    z wynikiem pierwszej funkcji wejściowej, do której przekazano param - kompozycja funkcji pierwszej i drugiej.
 
     Przykład:
 
-    groupBy([1,2,3,4,5], elem => elem % 2) === { '1': [1,3,5], '0': [2,4] }
+    const greet = name => `Hello ${name}`;
+    const shoutLoud = phrase => `${phrase.toUpperCase()}!!!!!!!!1111one`
 
+    const greetButVeryLoud = compose(greet, shoutLoud);
+
+    greetButVeryLoud('John') // HELLO JOHN!!!!!!!!1111one
 */
 
-describe('problem2 - groupBy', () => {
-    it('returns an object', () => {
-        expect(groupBy([1, 2, 3], v => v)).toBeInstanceOf(Object);
-        expect(groupBy([1, 2, 3], v => v)).not.toBeInstanceOf(Function);
+describe('problem2 - compose', () => {
+    it('returns a function', () => {
+        const func1 = pie => `Preparing ${pie}`;
+        const func2 = fruit => `${fruit} pie!`;
+
+        expect(typeof compose(func1, func2)).toBe('function');
     });
 
-    it('groups items by the keys returned by the supplied function', () => {
-        const result = groupBy([1, 2, 3, 4], number => number % 2);
+    describe('composed function', () => {
+        it('calls both supplied functions', () => {
+            const func1 = jest.fn();
+            const func2 = jest.fn();
 
-        const keys = Object.keys(result);
+            const composed = compose(func1, func2);
+            composed();
 
-        expect(keys.length).toBe(2);
-        expect(keys.indexOf('1') > -1).toBe(true);
-        expect(keys.indexOf('0') > -1).toBe(true);
+            expect(func1).toHaveBeenCalled();
+            expect(func2).toHaveBeenCalled();
+        });
+
+        it('invokes the first function with passed parameter', () => {
+            const func1 = jest.fn(fruit => `${fruit} pie!`);
+            const func2 = jest.fn(pie => `Preparing ${pie}`);
+
+            const composed = compose(func1, func2);
+            composed('apple');
+
+            expect(func1).toHaveBeenCalledWith('apple');
+        });
+
+        it('invokes the second function with result of the first function', () => {
+            const func1 = jest.fn(fruit => `${fruit} pie!`);
+            const func2 = jest.fn();
+
+            const composed = compose(func1, func2);
+            composed('apple');
+
+            expect(func2).toHaveBeenCalledWith('apple pie!');
+        });
+
+        it('returns result of the second functions invocation', () => {
+            const pieMaker = pie => `Preparing ${pie}`;
+            const fruitPieProvider = fruit => `${fruit} pie!`;
+
+            const fruitPieMaker = compose(fruitPieProvider, pieMaker);
+
+            expect(fruitPieMaker('apple')).toBe('Preparing apple pie!');
+        });
     });
 });

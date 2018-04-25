@@ -1,92 +1,91 @@
 /*
-    Napisz funkcję "memoize", która przyjmuje jako parametr funkcję i zwracającą nową funkcję,
-    która zwraca to samo co przekazana w parametrze, ale cache'uje wyniki dla wcześniej przekazanych
-    parametrów.
 
-    Przykład:
+    Używając zaimplementowanych wcześniej oraz dostępnych w tym module funkcji napisz kolejną, 
+    która przekształci odpowiedź z serwisu w dane odpowiednie do wyświetlenia na wykresie.
 
-    const addFiveTo = x => x + 5; 
-    const memoized = memoize(addFiveTo);
+    Dane zwracane przez serwis to tablica obiektów o formacie: 
 
-    memoized(2); // 7, addFiveTo została wywołana
-    memoized(5); // 10, addFiveTo została wywołana
-    memoized(2); // 7, addFiveTo *nie* została wywołana, wynik z cache
+    {
+        date: string, // ISO8601
+        count: number,
+    }
+
+    I mają być przekształocne do postaci: 
+    
+    {
+        labels: string[],
+        data: number[],
+    }
+
+    gdzie labelami mają być godziny w formacie np. 14:20, a wartościami odpowiednie wartości pola count.
+    
+    Interesują nas odczyty z dokładnością co do minuty, natomiast otrzymane dane były odczytywane częściej,
+    wobec czego potrzebna jest ostatnia wartość z danej minuty. Dodatkowo urządzenie pomiarowe nie zawsze 
+    jest poprawnie skalibrowane i zwraca wyniki ujemne - wiemy, że są one błędnie przesunięte (na szczęście 
+    wszystkie jednakowo) i musimy dane znormalizować.
 
 */
 
-describe('problem4 - memoize', () => {
-    it('returns a function', () => {
-        expect(memoize(() => {})).toBeInstanceOf(Function);
-    });
+const moment = require('moment');
+const toPairs = require('lodash.topairs');
 
-    describe('returned memoized function', () => {
-        it('takes one argument (has arity === 1)', () => {
-            expect(
-                memoize((param1, param2) => param1 + param2).length,
-            ).toBe(1);
-        });
+const formatISODates = data =>
+    data.map(entry => ({
+        ...entry,
+        date: moment(entry.date).format('HH:mm'),
+    }));
 
-        it('passes through the value returned by the supplied function', () => {
-            const someFunc = number => [number, number + 1, number + 2];
+const normalizeData = data => {
+    const min = Math.min(...data.map(entry => entry.count));
+    const offset = min < 0 ? Math.abs(min) : 0;
 
-            const memoized = memoize(someFunc);
+    return data.map(entry => ({ ...entry, count: entry.count + offset }));
+};
 
-            expect(memoized(1)).toEqual([1, 2, 3]);
-            expect(memoized(2)).toEqual([2, 3, 4]);
-            expect(memoized(3)).toEqual([3, 4, 5]);
-        });
+const filterFullMinutes = data =>
+    data.reduce(
+        (hours, entry) => ({ ...hours, [entry.date]: entry.count }),
+        {},
+    );
 
-        it("calls the supplied function for every parameter that haven't occured yet", () => {
-            const fakeFunc = jest.fn();
+const createDataset = hours =>
+    toPairs(hours).reduce(
+        ({ labels, data }, [hour, count]) => ({
+            labels: [...labels, hour],
+            data: [...data, count],
+        }),
+        { labels: [], data: [] },
+    );
 
-            const memoized = memoize(fakeFunc);
-            memoized('a');
-            memoized('b');
-            memoized('c');
+// Twoja implementacja poniżej
+const formatEntries = data => data;
 
-            expect(fakeFunc).toHaveBeenCalledTimes(3);
-        });
+describe('problem4 - formatEntries', () => {
+    it('formats entries correctly', () => {
+        const fakeData = [
+            { date: '2018-04-25T20:18:01.594Z', count: -30 },
+            { date: '2018-04-25T20:18:02.594Z', count: -32 },
+            { date: '2018-04-25T20:18:03.624Z', count: -31 },
+            { date: '2018-04-25T20:19:01.594Z', count: -45 },
+            { date: '2018-04-25T20:19:04.594Z', count: -40 },
+            { date: '2018-04-25T20:21:04.594Z', count: -23 },
+            { date: '2018-04-25T20:32:04.594Z', count: 2 },
+            { date: '2018-04-25T20:32:04.700Z', count: 3 },
+            { date: '2018-04-25T20:45:04.594Z', count: 15 },
+            { date: '2018-04-25T20:47:04.594Z', count: 23 },
+        ];
+        const firstMoment = moment('2018-04-25T20:18:01.594Z');
 
-        it("doesn't call the supplied function if previously encountered parameter have been passed (returns from cache)", () => {
-            const fakeFunc = jest.fn();
-
-            const memoized = memoize(fakeFunc);
-            memoized('a');
-            memoized('a');
-            memoized('a');
-
-            expect(fakeFunc).toHaveBeenCalledTimes(1);
-        });
-
-        it('takes any value as a parameter', () => {
-            const someFunc = value => JSON.stringify(value);
-
-            const memoized = memoize(someFunc);
-
-            expect(memoized({ a: 1 })).toEqual(someFunc({ a: 1 }));
-            expect(memoized([1, 'b', true])).toEqual(
-                someFunc([1, 'b', true]),
-            );
-            expect(memoized(() => 'Hello')).toEqual(
-                someFunc(() => 'Hello'),
-            );
-        });
-
-        it('memoizes value for params of every type (by reference)', () => {
-            const fakeFunc = jest.fn();
-            const object = { a: 1 };
-            const array = [1, 'b', true];
-            const func = () => 'Hello';
-
-            const memoized = memoize(fakeFunc);
-            memoized(object);
-            memoized(object);
-            memoized(array);
-            memoized(array);
-            memoized(func);
-            memoized(func);
-
-            expect(fakeFunc).toHaveBeenCalledTimes(3);
+        expect(formatEntries(fakeData)).toEqual({
+            labels: [
+                firstMoment.format('HH:mm'),
+                firstMoment.add(1, 'minutes').format('HH:mm'),
+                firstMoment.add(3, 'minutes').format('HH:mm'),
+                firstMoment.add(14, 'minutes').format('HH:mm'),
+                firstMoment.add(27, 'minutes').format('HH:mm'),
+                firstMoment.add(29, 'minutes').format('HH:mm'),
+            ],
+            data: [15, 13, 14, 0, 5, 22, 47, 48, 60, 68],
         });
     });
 });

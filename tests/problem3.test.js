@@ -1,31 +1,78 @@
 /*
-    Napisz funkcję "zip", przyjmującą tablicą dowolną ilość tablic i zwracającą nową tablicę, 
-    elementami której będą tablice z kolejno: pierwszym elementem z pierwszej tablicy, 
-    pierwszym elementem drugiej tablicy...pierwszym elementem z n-tej tablicy... itd.
+
+    Napisz funkcję "curry", która przyjmuje funkcję (funcIn) wymagającą wielu parametrów 
+    i zwraca nową funkcję (funcOut). 
+    
+    Zwrócona funkcja działa identycznie jak funcIn, ale umożliwia przekazywanie parametrów
+    pojedynczo, jeden za drugim. funcOut powinna zatem:
+        - przyjmować tylko jeden paramter,
+        - zwracać nową funkcję, o takim zamym zachowaniu, jeśli suma przekazanych do tej pory argumentów
+          jest mniejsza niż liczba wymaganych argumentów (arność, ang. arity) funcIn
+        - zwracać wartość taką samą jak funcIn po przekazaniu ilości parametrów równej arności funcIn
 
     Przykład:
 
-    zip([1, 2], ['a', 'b']) === [[1, 'a'], [2, 'b']]
+        const func = (a, b, c, d) => a + b + c + d;
+        const curriedFunc = curry(func);
 
-    Zestawów elementów powinno być tyle, ile elementów w najkrótszej tablicy.
+        jest równoważne z:
+
+        const curriedFunc = a => b => c => d => a + b + c + d;
+
+        i skutkuje takim zachowaniem: 
+
+        curriedFunc(1)          // zwraca funkcję
+        curriedFunc(1)(2)       // zwraca funkcję
+        curriedFunc(1)(2)(3)    // zwraca funkcję
+        curriedFunc(1)(2)(3)(4) // zwraca 10
+
 */
 
-describe('problem3 - zip', () => {
-    it('returns an Array', () => {
-        expect(zip([1, 2], ['a', 'b'])).toBeInstanceOf(Array);
+describe('problem3 - curry', () => {
+    it("returns the same func if it doesn't require any parameters", () => {
+        const func = () => 'apple';
+
+        expect(curry(func)).toBe(func);
     });
 
-    it('matches a1[0] with a2[0]...an[0], a1[1] with a2[1]...an[1] etc.', () => {
-        expect(zip([1, 2, 3], ['a', 'b', 'c'], [true, false, {}])).toEqual([
-            [1, 'a', true],
-            [2, 'b', false],
-            [3, 'c', {}],
-        ]);
+    it('returns a new function if with arity === 1 if the original one required any parameters', () => {
+        const func = (a, b, c, d) => a + b + c + d;
+
+        const curriedFunc = curry(func);
+
+        expect(curriedFunc.length).toBe(1);
     });
 
-    it('returns as many pairs as elements in the shortest array', () => {
-        expect(
-            zip([1, 2, 3, 4, 5], ['a', 'b', 'c'], [true, false]).length,
-        ).toBe(2);
+    it('returns a new function if with arity === 1 when any parameter below original functions arity is passed', () => {
+        const func = (a, b, c, d) => a + b + c + d;
+
+        const curriedFunc = curry(func);
+
+        expect(typeof curriedFunc(1)).toBe('function');
+        expect(curriedFunc(1).length).toBe(1);
+        expect(typeof curriedFunc(1)(2)).toBe('function');
+        expect(curriedFunc(1)(2).length).toBe(1);
+    });
+
+    it("returns a result of func's invocation if all the params have been passed", () => {
+        const func = (a, b, c) => a + b + c;
+
+        const curriedFunc = curry(func);
+
+        expect(curriedFunc(1)(2)(3)).toBe(6);
+    });
+
+    it('curried function ignores all the parameters, but the first', () => {
+        const func = (a, b, c, d) => a + b + c + d;
+
+        const curriedFunc = curry(func);
+
+        expect(typeof curriedFunc(1, 2, 3)).toBe('function');
+        expect(curriedFunc(1, 2, 3).length).toBe(1);
+        expect(typeof curriedFunc(1)(2, 3, 4)).toBe('function');
+        expect(curriedFunc(1)(2, 3, 4).length).toBe(1);
+        expect(typeof curriedFunc(1)(2)(3, 4, 5)).toBe('function');
+        expect(curriedFunc(1)(2)(3, 4, 5).length).toBe(1);
+        expect(curriedFunc(1)(2)(3)(4, 5, 6)).toBe(10);
     });
 });
