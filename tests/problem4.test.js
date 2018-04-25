@@ -29,10 +29,10 @@
 const moment = require('moment');
 const toPairs = require('lodash.topairs');
 
-const formatISODates = data =>
+const formatISODates = format => data =>
     data.map(entry => ({
         ...entry,
-        date: moment(entry.date).format('HH:mm'),
+        date: moment(entry.date).format(format),
     }));
 
 const normalizeData = data => {
