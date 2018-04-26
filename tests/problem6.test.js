@@ -15,6 +15,36 @@
         }
 */
 
+class LazyPipe {
+    constructor(value, combinedHandler) {
+        this.value = value;
+        this.handlers = combinedHandler;
+    }
+
+    static startingWith(value) {
+        return new LazyPipe(value, []);
+    }
+
+    chain(handler) {
+        this.handlers.push(handler);
+        return this;
+    }
+
+    return() {
+        return this.handlers.reduce((combinedValue, handler) => {
+            if(combinedValue instanceof LazyPipe) {
+                combinedValue = combinedValue.return();
+            }
+
+            return handler(combinedValue);
+        }, this.value);
+    }
+
+    finally(handler) {
+        return this.chain(handler).return();
+    }
+}
+
 describe('problem6 - LazyPipe', () => {
     it('returns a wrapped value (an object)', () => {
         expect(LazyPipe.startingWith(2)).toBeInstanceOf(LazyPipe);
