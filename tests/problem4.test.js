@@ -85,7 +85,7 @@ describe('problem4 - formatEntries', () => {
                 firstMoment.add(27, 'minutes').format('HH:mm'),
                 firstMoment.add(29, 'minutes').format('HH:mm'),
             ],
-            data: [15, 13, 14, 0, 5, 22, 47, 48, 60, 68],
+            data: [14, 5, 22, 48, 60, 68],
         });
     });
 });
