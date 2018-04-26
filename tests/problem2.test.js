@@ -1,9 +1,10 @@
 /*
-    Napisz funkcję "compose", przyjmującą dwie funkcje jako parametry i zwracającą
-    nową funkcję. 
-    
-    Wynikiem wywołania nowej funkcji z parametrem (param) jest rezultat wywołania drugiej funkcji wejściowej
-    z wynikiem pierwszej funkcji wejściowej, do której przekazano param - kompozycja funkcji pierwszej i drugiej.
+    Napisz funkcję "compose", przyjmującą dowolną liczbę funkcji jako parametry i zwracającą
+    nową funkcję.
+
+    Wynikiem wywołania nowej funkcji z parametrem (param) jest (w przypadku przekazania wcześniej dwóch funkcji)
+    rezultat wywołania drugiej funkcji wejściowej z wynikiem pierwszej funkcji wejściowej, do której przekazano param - kompozycja
+    funkcji pierwszej i drugiej.
 
     Przykład:
 
@@ -16,6 +17,22 @@
 */
 
 describe('problem2 - compose', () => {
+    function stringToNumber(s) {
+        return parseInt(s);
+    }
+
+    function numberToString(n) {
+        return n.toString();
+    }
+
+    function wrap(value) {
+        return { value };
+    }
+
+    function unWrap({ value }) {
+        return value;
+    }
+
     it('returns a function', () => {
         const func1 = pie => `Preparing ${pie}`;
         const func2 = fruit => `${fruit} pie!`;
@@ -62,6 +79,68 @@ describe('problem2 - compose', () => {
             const fruitPieMaker = compose(fruitPieProvider, pieMaker);
 
             expect(fruitPieMaker('apple')).toBe('Preparing apple pie!');
+        });
+
+        it('works properly for 3 functions', () => {
+            const composed = compose(
+                stringToNumber,
+                wrap,
+                wrap,
+            );
+
+            const result = composed('5');
+
+            expect(result).toEqual({ value: { value: 5 } });
+        });
+
+        it('works properly for 5 functions', () => {
+            const composed = compose(
+                stringToNumber,
+                numberToString,
+                wrap,
+                unWrap,
+                wrap,
+            );
+
+            const result = composed('5');
+
+            expect(result).toEqual({ value: '5' });
+        });
+
+        it('works properly for 27 functions', () => {
+            const composed = compose(
+                stringToNumber,
+                numberToString,
+                stringToNumber,
+                numberToString,
+                stringToNumber,
+                numberToString,
+                stringToNumber,
+                numberToString,
+                stringToNumber,
+                wrap,
+                unWrap,
+                wrap,
+                wrap,
+                unWrap,
+                unWrap,
+                wrap,
+                wrap,
+                wrap,
+                unWrap,
+                unWrap,
+                unWrap,
+                numberToString,
+                stringToNumber,
+                wrap,
+                unWrap,
+                wrap,
+                wrap,
+            );
+
+            const result = composed('5');
+
+            expect(result).toEqual({ value: { value: 5 } });
         });
     });
 });
