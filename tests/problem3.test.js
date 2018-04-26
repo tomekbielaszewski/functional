@@ -25,8 +25,16 @@
         curriedFunc(1)(2)       // zwraca funkcję
         curriedFunc(1)(2)(3)    // zwraca funkcję
         curriedFunc(1)(2)(3)(4) // zwraca 10
-
 */
+
+function curry(func) {
+    let length = func.length;
+    if (length === 0) return func;
+    return function (arg) {
+        if (func.length === 1) return func(arg);
+        return curry(func.bind(null, arg));
+    }
+}
 
 describe('problem3 - curry', () => {
     it("returns the same func if it doesn't require any parameters", () => {
