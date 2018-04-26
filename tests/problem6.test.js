@@ -26,8 +26,7 @@ class LazyPipe {
     }
 
     chain(handler) {
-        this.handlers.push(handler);
-        return this;
+        return new LazyPipe(this.value, [...this.handlers, handler]);
     }
 
     return() {
