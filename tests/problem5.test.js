@@ -27,6 +27,28 @@
         }
 */
 
+class Pipe {
+    constructor(value) {
+        this.value = value;
+    }
+
+    static startingWith(value) {
+        return new Pipe(value);
+    }
+
+    chain(handler) {
+        return new Pipe(handler(this.value))
+    }
+
+    return() {
+        return this.value;
+    }
+
+    finally(handler) {
+        return this.chain(handler).return();
+    }
+}
+
 describe('problem5 - pipe', () => {
     it('returns a wrapped value (an object)', () => {
         expect(Pipe.startingWith(2)).toBeInstanceOf(Pipe);
