@@ -16,6 +16,15 @@
     greetButVeryLoud('John') // HELLO JOHN!!!!!!!!1111one
 */
 
+function compose() {
+    let args = Array.prototype.slice.call(arguments);
+    return function (name) {
+        return args.reduce((acc, curr) => {
+            return curr(acc);
+        }, name);
+    }
+}
+
 describe('problem2 - compose', () => {
     function stringToNumber(s) {
         return parseInt(s);
@@ -26,10 +35,10 @@ describe('problem2 - compose', () => {
     }
 
     function wrap(value) {
-        return { value };
+        return {value};
     }
 
-    function unWrap({ value }) {
+    function unWrap({value}) {
         return value;
     }
 
@@ -90,7 +99,7 @@ describe('problem2 - compose', () => {
 
             const result = composed('5');
 
-            expect(result).toEqual({ value: { value: 5 } });
+            expect(result).toEqual({value: {value: 5}});
         });
 
         it('works properly for 5 functions', () => {
@@ -104,7 +113,7 @@ describe('problem2 - compose', () => {
 
             const result = composed('5');
 
-            expect(result).toEqual({ value: '5' });
+            expect(result).toEqual({value: '5'});
         });
 
         it('works properly for 27 functions', () => {
@@ -140,7 +149,7 @@ describe('problem2 - compose', () => {
 
             const result = composed('5');
 
-            expect(result).toEqual({ value: { value: 5 } });
+            expect(result).toEqual({value: {value: 5}});
         });
     });
 });
