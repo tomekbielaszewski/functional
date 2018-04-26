@@ -9,6 +9,15 @@
 
 */
 
+function groupBy(arr, consumer) {
+    return arr.reduce((acc, curr) => {
+        let currKey = consumer(curr);
+        acc[currKey] = acc[currKey] || [];
+        acc[currKey].push(curr);
+        return acc;
+    }, {})
+}
+
 describe('problem1 - groupBy', () => {
     it('returns an object', () => {
         expect(groupBy([1, 2, 3], v => v)).toBeInstanceOf(Object);
