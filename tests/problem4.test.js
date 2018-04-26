@@ -58,7 +58,12 @@ const createDataset = hours =>
     );
 
 // Twoja implementacja poniżej
-const formatEntries = data => data;
+const formatEntries = compose(
+    normalizeData,
+    formatISODates('HH:mm'),
+    filterFullMinutes,
+    createDataset
+);
 
 describe('problem4 - formatEntries', () => {
     it('formats entries correctly', () => {
